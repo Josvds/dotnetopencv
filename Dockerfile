@@ -99,3 +99,8 @@ RUN make install
 
 # Setup libraries
 ENV LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
+
+
+#
+# Here your code...
+#
