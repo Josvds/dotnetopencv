@@ -1,106 +1,124 @@
-FROM ubuntu:18.04 AS build-env
+#
+# Base image
+#
+
+# Set image
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim AS base
+
 
 #
+# Dependencies
+#
+
+# Set image
+FROM base AS dependencies
+
+# Update
+RUN apt update
+
 # Install
-#
-
-# General
-RUN apt update
-RUN apt upgrade -y
-RUN apt dist-upgrade -y
-RUN apt install -y pgp
-RUN apt install -y wget
-RUN apt install -y git
-RUN apt install -y apt-utils
-RUN apt install -y software-properties-common
-RUN apt install -y apt-transport-https
-
-# Prepare dotnet installation
-RUN wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-RUN dpkg -i packages-microsoft-prod.deb
-RUN add-apt-repository universe
-RUN apt update
-RUN apt install -y dotnet-sdk-2.2 -y
+RUN apt install -y build-essential cmake git pkg-config libgtk-3-dev \
+    libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
+    libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev \
+    gfortran openexr libatlas-base-dev python3-dev python3-numpy \
+    libtbb2 libtbb-dev libdc1394-22-dev yasm \
+	libtiff5-dev libxine2-dev libgstreamer1.0-dev \
+	libgstreamer-plugins-base1.0-dev qt5-default libgtk2.0-dev \
+	libmp3lame-dev libtheora-dev libvorbis-dev libopencore-amrnb-dev \
+	libopencore-amrwb-dev x264 v4l-utils \
+	libprotobuf-dev protobuf-compiler libgoogle-glog-dev libgflags-dev \
+	libgphoto2-dev libeigen3-dev libhdf5-dev doxygen software-properties-common \
+	x264 v4l-utils libavresample-dev
 
 
 #
-# OpenCV
-# https://cv-tricks.com/installation/opencv-4-1-ubuntu18-04/
-# + for repo on first line: https://www.pyimagesearch.com/2018/05/28/ubuntu-18-04-how-to-install-opencv/
+# Build opencv
 #
 
-# Required dependencies
-RUN add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
-RUN apt update -y # Update the list of packages
-RUN apt remove -y x264 libx264-dev # Remove the older version of libx264-dev and x264
-RUN apt install -y build-essential checkinstall cmake pkg-config yasm
-RUN apt install -y libjpeg8-dev libjasper-dev libpng12-dev
-RUN apt install -y libtiff5-dev
-RUN apt install -y libavcodec-dev libavformat-dev libswscale-dev libdc1394-22-dev
-RUN apt install -y libxine2-dev libv4l-dev
-RUN apt install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
-RUN apt install -y qt5-default libgtk2.0-dev libtbb-dev
-RUN apt install -y libatlas-base-dev
-RUN apt install -y libfaac-dev libmp3lame-dev libtheora-dev
-RUN apt install -y libvorbis-dev libxvidcore-dev
-RUN apt install -y libopencore-amrnb-dev libopencore-amrwb-dev
-RUN apt install -y x264 v4l-utils
+# Set image
+FROM dependencies AS build-opencv
 
-# Optional dependencies
-RUN apt install -y libprotobuf-dev protobuf-compiler
-RUN apt install -y libgoogle-glog-dev libgflags-dev
-RUN apt install -y libgphoto2-dev libeigen3-dev libhdf5-dev doxygen
-
-# Download OpenCV from Github
+# Clone opencv
 WORKDIR /opencv
 RUN git clone https://github.com/opencv/opencv.git
 WORKDIR /opencv/opencv
-RUN git checkout 4.1.0
- 
-# Download OpenCV_contrib from Github
+RUN git checkout 4.3.0
+
+# Clone opencv-contrib
 WORKDIR /opencv
 RUN git clone https://github.com/opencv/opencv_contrib.git
 WORKDIR /opencv/opencv_contrib
-RUN git checkout 4.1.0
+RUN git checkout 4.3.0
 
 # Build
 WORKDIR /opencv/opencv/build
 RUN cmake \
-        # Compiler params
-        -D CMAKE_BUILD_TYPE=RELEASE \
-        -D CMAKE_INSTALL_PREFIX=/usr/local \
-		-D OPENCV_GENERATE_PKGCONFIG=YES \
-        # Modules
-		-D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
-		# No examples
-        -D INSTALL_PYTHON_EXAMPLES=NO \
-        -D INSTALL_C_EXAMPLES=NO \
-        # Support
-        -D WITH_IPP=NO \
-        -D WITH_1394=NO \
-        -D WITH_LIBV4L=NO \
-        -D WITH_V4l=YES \
-        -D WITH_TBB=YES \
-        -D WITH_FFMPEG=YES \
-        -D WITH_GPHOTO2=YES \
-        -D WITH_GSTREAMER=YES \
-        -D WITH_QT=YES \
-		-D WITH_OPENGL=YES \
-		# NO doc test and other bindings
-        -D BUILD_DOCS=NO \
-        -D BUILD_TESTS=NO \
-        -D BUILD_PERF_TESTS=NO \
-        -D BUILD_EXAMPLES=NO \
-        -D BUILD_opencv_java=NO \
-        -D BUILD_opencv_python2=NO \
-        -D BUILD_ANDROID_EXAMPLES=NO ..
-RUN NPROC=$(nproc); make -j$NPROC
+	# Compiler params
+	-D CMAKE_BUILD_TYPE=RELEASE \
+	-D CMAKE_INSTALL_PREFIX=/opencv/dist \
+	-D OPENCV_GENERATE_PKGCONFIG=YES \
+	# Modules
+	-D OPENCV_EXTRA_MODULES_PATH=/opencv/opencv_contrib/modules \
+	# No examples
+	-D INSTALL_PYTHON_EXAMPLES=NO \
+	-D INSTALL_C_EXAMPLES=NO \
+	# Support
+	-D WITH_IPP=NO \
+	-D WITH_1394=NO \
+	-D WITH_LIBV4L=NO \
+	-D WITH_V4l=YES \
+	-D WITH_TBB=YES \
+	-D WITH_FFMPEG=YES \
+	-D WITH_GPHOTO2=YES \
+	-D WITH_GSTREAMER=YES \
+	-D WITH_QT=YES \
+	-D WITH_OPENGL=YES \
+	# NO doc test and other bindings
+	-D BUILD_DOCS=NO \
+	-D BUILD_TESTS=NO \
+	-D BUILD_PERF_TESTS=NO \
+	-D BUILD_EXAMPLES=NO \
+	-D BUILD_opencv_java=NO \
+	-D BUILD_opencv_python2=NO \
+	-D BUILD_ANDROID_EXAMPLES=NO ..
+RUN make -j$(nproc)
 RUN make install
 
-# Setup libraries
-ENV LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
+
+#
+# Build opencvsharp
+#
+
+# Set image
+FROM dependencies AS build-opencvsharp
+
+# Copy from opencv build
+COPY --from=build-opencv /opencv/dist /opencv/dist
+
+# Clone opencvsharp
+WORKDIR /opencv
+RUN git clone https://github.com/shimat/opencvsharp.git
+WORKDIR /opencv/opencvsharp
+RUN git checkout 4.3.0.20200405
+
+# Build
+WORKDIR /opencv/opencvsharp/src/build
+RUN cmake -D CMAKE_INSTALL_PREFIX=/opencv/dist ..
+RUN make -j$(nproc)
+RUN make install
 
 
 #
-# Here your code...
+# Runtime
 #
+
+# Set image
+FROM dependencies AS runtime
+WORKDIR /app
+
+# Copy from builds
+COPY --from=build-opencv /opencv/dist /opencv/dist
+COPY --from=build-opencvsharp /opencv/dist /opencv/dist
+
+# Libs
+ENV LD_LIBRARY_PATH=/opencv/dist/lib:/lib:/usr/lib:/usr/local/lib
