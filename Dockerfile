@@ -5,38 +5,19 @@
 # Set image
 FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim AS base
 
-
-#
-# Dependencies
-#
-
-# Set image
-FROM base AS dependencies
-
 # Update
 RUN apt update
 
-# Install
-RUN apt install -y build-essential cmake git pkg-config libgtk-3-dev \
-    libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
-    libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev \
-    gfortran openexr libatlas-base-dev python3-dev python3-numpy \
-    libtbb2 libtbb-dev libdc1394-22-dev yasm \
-	libtiff5-dev libxine2-dev libgstreamer1.0-dev \
-	libgstreamer-plugins-base1.0-dev qt5-default libgtk2.0-dev \
-	libmp3lame-dev libtheora-dev libvorbis-dev libopencore-amrnb-dev \
-	libopencore-amrwb-dev x264 v4l-utils \
-	libprotobuf-dev protobuf-compiler libgoogle-glog-dev libgflags-dev \
-	libgphoto2-dev libeigen3-dev libhdf5-dev doxygen software-properties-common \
-	x264 v4l-utils libavresample-dev
-
 
 #
-# Build opencv
+# Git
 #
 
 # Set image
-FROM dependencies AS build-opencv
+FROM base AS git
+
+# Install git
+RUN apt install -y git
 
 # Clone opencv
 WORKDIR /opencv
@@ -49,6 +30,82 @@ WORKDIR /opencv
 RUN git clone https://github.com/opencv/opencv_contrib.git
 WORKDIR /opencv/opencv_contrib
 RUN git checkout 4.3.0
+
+# Clone opencvsharp
+WORKDIR /opencv
+RUN git clone https://github.com/shimat/opencvsharp.git
+WORKDIR /opencv/opencvsharp
+RUN git checkout 4.3.0.20200405
+
+
+#
+# Dependencies
+#
+
+# Set image
+FROM git AS dependencies
+
+# Install
+RUN apt install -y \
+	build-essential \
+	cmake \
+	qt5-default
+
+# Install needings
+RUN apt install -y \
+	libgtk-3-dev \
+	libavcodec-dev \
+	libavformat-dev \
+	libswscale-dev \
+	libv4l-dev \
+	libxvidcore-dev \
+	libx264-dev \
+	libjpeg-dev \
+	libpng-dev \
+	libtiff-dev \
+	libatlas-base-dev \
+	libtbb2 \
+	libtbb-dev \
+	libdc1394-22-dev \
+	libtiff5-dev \
+	libxine2-dev \
+	libgstreamer1.0-dev \
+	libgstreamer-plugins-base1.0-dev \
+	libgtk2.0-dev \
+	libmp3lame-dev \
+	libtheora-dev \
+	libvorbis-dev \
+	libopencore-amrnb-dev \
+	libopencore-amrwb-dev \
+	libprotobuf-dev \
+	libgoogle-glog-dev \
+	libgflags-dev \
+	libgphoto2-dev \
+	libeigen3-dev \
+	libhdf5-dev \
+	libavresample-dev \
+	qt5-default
+
+RUN apt install -y \
+	x264 \
+	pkg-config \
+	gfortran \
+	openexr \
+	python3-dev \
+	python3-numpy \
+	yasm \
+	v4l-utils \
+	doxygen \
+	software-properties-common \
+	protobuf-compiler
+
+
+#
+# Build opencv
+#
+
+# Set image
+FROM dependencies AS build-opencv
 
 # Build
 WORKDIR /opencv/opencv/build
@@ -94,12 +151,6 @@ FROM dependencies AS build-opencvsharp
 
 # Copy from opencv build
 COPY --from=build-opencv /opencv/dist /opencv/dist
-
-# Clone opencvsharp
-WORKDIR /opencv
-RUN git clone https://github.com/shimat/opencvsharp.git
-WORKDIR /opencv/opencvsharp
-RUN git checkout 4.3.0.20200405
 
 # Build
 WORKDIR /opencv/opencvsharp/src/build
