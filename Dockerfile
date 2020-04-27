@@ -10,49 +10,17 @@ RUN apt update
 
 
 #
-# Git
-#
-
-# Set image
-FROM base AS git
-
-# Install git
-RUN apt install -y git
-
-# Clone opencv
-WORKDIR /opencv
-RUN git clone https://github.com/opencv/opencv.git
-WORKDIR /opencv/opencv
-RUN git checkout 4.3.0
-
-# Clone opencv-contrib
-WORKDIR /opencv
-RUN git clone https://github.com/opencv/opencv_contrib.git
-WORKDIR /opencv/opencv_contrib
-RUN git checkout 4.3.0
-
-# Clone opencvsharp
-WORKDIR /opencv
-RUN git clone https://github.com/shimat/opencvsharp.git
-WORKDIR /opencv/opencvsharp
-RUN git checkout 4.3.0.20200405
-
-
-#
 # Dependencies
 #
 
 # Set image
-FROM git AS dependencies
+FROM base AS dependencies
 
-# Install
+# Install all required packages
 RUN apt install -y \
 	build-essential \
 	cmake \
-	qt5-default
-
-# Install needings
-RUN apt install -y \
+	qt5-default \
 	libgtk-3-dev \
 	libavcodec-dev \
 	libavformat-dev \
@@ -84,9 +52,7 @@ RUN apt install -y \
 	libeigen3-dev \
 	libhdf5-dev \
 	libavresample-dev \
-	qt5-default
-
-RUN apt install -y \
+	qt5-default \
 	x264 \
 	pkg-config \
 	gfortran \
@@ -101,21 +67,52 @@ RUN apt install -y \
 
 
 #
+# Download
+#
+
+# Set image
+FROM base AS download
+WORKDIR /download
+
+# Required packages
+RUN apt install -y unzip wget
+
+# Download required sources
+RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/4.3.0.zip
+RUN wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.3.0.zip
+RUN wget -O opencvsharp.zip https://github.com/shimat/opencvsharp/archive/4.3.0.20200405.zip
+
+# Extract zips
+RUN unzip opencv.zip
+RUN unzip opencv_contrib.zip
+RUN unzip opencvsharp.zip
+
+# Rename folders
+RUN mv opencv-4.3.0 opencv
+RUN mv opencv_contrib-4.3.0 opencv_contrib
+RUN mv opencvsharp-4.3.0.20200405 opencvsharp
+
+
+#
 # Build opencv
 #
 
 # Set image
 FROM dependencies AS build-opencv
 
+# Copy downloaded data
+COPY --from=download /download/opencv /build/opencv
+COPY --from=download /download/opencv_contrib /build/opencv_contrib
+
 # Build
-WORKDIR /opencv/opencv/build
+WORKDIR /build/opencv/build
 RUN cmake \
 	# Compiler params
 	-D CMAKE_BUILD_TYPE=RELEASE \
-	-D CMAKE_INSTALL_PREFIX=/opencv/dist \
+	-D CMAKE_INSTALL_PREFIX=/build/dist \
 	-D OPENCV_GENERATE_PKGCONFIG=YES \
 	# Modules
-	-D OPENCV_EXTRA_MODULES_PATH=/opencv/opencv_contrib/modules \
+	-D OPENCV_EXTRA_MODULES_PATH=/build/opencv_contrib/modules \
 	# No examples
 	-D INSTALL_PYTHON_EXAMPLES=NO \
 	-D INSTALL_C_EXAMPLES=NO \
@@ -149,12 +146,15 @@ RUN make install
 # Set image
 FROM dependencies AS build-opencvsharp
 
-# Copy from opencv build
-COPY --from=build-opencv /opencv/dist /opencv/dist
+# Copy downloaded data
+COPY --from=download /download/opencvsharp /build/opencvsharp
+
+# Copy build data
+COPY --from=build-opencv /build/dist /build/dist
 
 # Build
-WORKDIR /opencv/opencvsharp/src/build
-RUN cmake -D CMAKE_INSTALL_PREFIX=/opencv/dist ..
+WORKDIR /build/opencvsharp/src/build
+RUN cmake -D CMAKE_INSTALL_PREFIX=/build/dist ..
 RUN make -j$(nproc)
 RUN make install
 
@@ -167,9 +167,8 @@ RUN make install
 FROM dependencies AS runtime
 WORKDIR /app
 
-# Copy from builds
-COPY --from=build-opencv /opencv/dist /opencv/dist
-COPY --from=build-opencvsharp /opencv/dist /opencv/dist
+# Copy from build (only opencvsharp is needed because it already contains opencv)
+COPY --from=build-opencvsharp /build/dist /opencv/
 
 # Libs
-ENV LD_LIBRARY_PATH=/opencv/dist/lib:/lib:/usr/lib:/usr/local/lib
+ENV LD_LIBRARY_PATH=/opencv/lib:/lib:/usr/lib:/usr/local/lib
