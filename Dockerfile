@@ -25,6 +25,33 @@ RUN apt install -y \
 	libavcodec-dev \
 	libavformat-dev \
 	libswscale-dev \
+	libv4l-dev \#
+# Base image
+#
+
+# Set image
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim AS base
+
+# Update
+RUN apt update
+
+
+#
+# Dependencies
+#
+
+# Set image
+FROM base AS dependencies
+
+# Install all required packages
+RUN apt install -y \
+	build-essential \
+	cmake \
+	qt5-default \
+	libgtk-3-dev \
+	libavcodec-dev \
+	libavformat-dev \
+	libswscale-dev \
 	libv4l-dev \
 	libxvidcore-dev \
 	libx264-dev \
@@ -113,28 +140,36 @@ RUN cmake \
 	-D OPENCV_GENERATE_PKGCONFIG=YES \
 	# Modules
 	-D OPENCV_EXTRA_MODULES_PATH=/build/opencv_contrib/modules \
-	# No examples
-	-D INSTALL_PYTHON_EXAMPLES=NO \
-	-D INSTALL_C_EXAMPLES=NO \
-	# Support
+	# Set support
+	-D WITH_FFMPEG=YES \
+	-D WITH_GSTREAMER=YES \
 	-D WITH_IPP=NO \
 	-D WITH_1394=NO \
 	-D WITH_LIBV4L=NO \
-	-D WITH_V4l=YES \
-	-D WITH_TBB=YES \
-	-D WITH_FFMPEG=YES \
-	-D WITH_GPHOTO2=YES \
-	-D WITH_GSTREAMER=YES \
-	-D WITH_QT=YES \
-	-D WITH_OPENGL=YES \
-	# NO doc test and other bindings
-	-D BUILD_DOCS=NO \
-	-D BUILD_TESTS=NO \
-	-D BUILD_PERF_TESTS=NO \
+	-D WITH_V4l=NO \
+	-D WITH_TBB=NO \
+	-D WITH_GPHOTO2=NO \
+	-D WITH_QT=NO \
+	-D WITH_OPENGL=NO \
+	# No examples
+	-D INSTALL_PYTHON_EXAMPLES=NO \
+	-D INSTALL_C_EXAMPLES=NO \
 	-D BUILD_EXAMPLES=NO \
+	-D BUILD_ANDROID_EXAMPLES=NO \
+	# No tests
+    -D BUILD_TESTS=NO \
+	-D BUILD_PERF_TESTS=NO \
+	# No docs
+	-D BUILD_JAVA=NO \
+	-D BUILD_DOCS=NO \
+	# No unused platforms
 	-D BUILD_opencv_java=NO \
 	-D BUILD_opencv_python2=NO \
-	-D BUILD_ANDROID_EXAMPLES=NO ..
+    -D BUILD_opencv_app=NO \
+    -D BUILD_opencv_python=NO \
+    -D BUILD_opencv_ts=NO \
+    -D BUILD_opencv_js=NO \
+	..
 RUN make -j$(nproc)
 RUN make install
 
