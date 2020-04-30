@@ -25,33 +25,6 @@ RUN apt install -y \
 	libavcodec-dev \
 	libavformat-dev \
 	libswscale-dev \
-	libv4l-dev \#
-# Base image
-#
-
-# Set image
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim AS base
-
-# Update
-RUN apt update
-
-
-#
-# Dependencies
-#
-
-# Set image
-FROM base AS dependencies
-
-# Install all required packages
-RUN apt install -y \
-	build-essential \
-	cmake \
-	qt5-default \
-	libgtk-3-dev \
-	libavcodec-dev \
-	libavformat-dev \
-	libswscale-dev \
 	libv4l-dev \
 	libxvidcore-dev \
 	libx264-dev \
