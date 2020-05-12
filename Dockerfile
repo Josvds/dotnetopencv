@@ -80,7 +80,7 @@ RUN apt install -y unzip wget
 # Download required sources
 RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/4.3.0.zip
 RUN wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.3.0.zip
-RUN wget -O opencvsharp.zip https://github.com/shimat/opencvsharp/archive/4.3.0.20200421.zip
+RUN wget -O opencvsharp.zip https://github.com/shimat/opencvsharp/archive/4.3.0.20200422.zip
 
 # Extract zips
 RUN unzip opencv.zip
@@ -90,7 +90,7 @@ RUN unzip opencvsharp.zip
 # Rename folders
 RUN mv opencv-4.3.0 opencv
 RUN mv opencv_contrib-4.3.0 opencv_contrib
-RUN mv opencvsharp-4.3.0.20200421 opencvsharp
+RUN mv opencvsharp-4.3.0.20200422 opencvsharp
 
 
 #
