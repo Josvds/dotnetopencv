@@ -3,7 +3,7 @@
 #
 
 # Set image
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim AS base
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
 
 # Update
 RUN apt update
