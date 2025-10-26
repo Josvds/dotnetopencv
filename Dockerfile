@@ -3,7 +3,7 @@
 #
 
 # Set image
-FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
+FROM mcr.microsoft.com/dotnet/runtime:9.0-bookworm-slim AS base
 
 # Update
 RUN apt update
@@ -17,53 +17,51 @@ RUN apt update
 FROM base AS dependencies
 
 # Install all required packages
-RUN apt install -y \
-	build-essential \
-	cmake \
-	qt5-default \
-	libgtk-3-dev \
-	libavcodec-dev \
-	libavformat-dev \
-	libswscale-dev \
-	libv4l-dev \
-	libxvidcore-dev \
-	libx264-dev \
-	libjpeg-dev \
-	libpng-dev \
-	libtiff-dev \
-	libatlas-base-dev \
-	libtbb2 \
-	libtbb-dev \
-	libdc1394-22-dev \
-	libtiff5-dev \
-	libxine2-dev \
-	libgstreamer1.0-dev \
-	libgstreamer-plugins-base1.0-dev \
-	libgtk2.0-dev \
-	libmp3lame-dev \
-	libtheora-dev \
-	libvorbis-dev \
-	libopencore-amrnb-dev \
-	libopencore-amrwb-dev \
-	libprotobuf-dev \
-	libgoogle-glog-dev \
-	libgflags-dev \
-	libgphoto2-dev \
-	libeigen3-dev \
-	libhdf5-dev \
-	libavresample-dev \
-	qt5-default \
-	x264 \
-	pkg-config \
-	gfortran \
-	openexr \
-	python3-dev \
-	python3-numpy \
-	yasm \
-	v4l-utils \
-	doxygen \
-	software-properties-common \
-	protobuf-compiler
+RUN apt update && apt install -y \
+    build-essential \
+    cmake \
+    qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools \
+    libgtk-3-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libv4l-dev \
+    libxvidcore-dev \
+    libx264-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libatlas-base-dev \
+    libtbb-dev libtbb12 \
+    libdc1394-dev \
+    libtiff5-dev \
+    libxine2-dev \
+    libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev \
+    libgtk2.0-dev \
+    libmp3lame-dev \
+    libtheora-dev \
+    libvorbis-dev \
+    libopencore-amrnb-dev \
+    libopencore-amrwb-dev \
+    libprotobuf-dev \
+    libgoogle-glog-dev \
+    libgflags-dev \
+    libgphoto2-dev \
+    libeigen3-dev \
+    libhdf5-dev \
+    libswresample-dev \
+    x264 \
+    pkg-config \
+    gfortran \
+    openexr \
+    python3-dev \
+    python3-numpy \
+    yasm \
+    v4l-utils \
+    doxygen \
+    software-properties-common \
+    protobuf-compiler
 
 
 #
