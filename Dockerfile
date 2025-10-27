@@ -3,7 +3,7 @@
 #
 
 # Set image
-FROM mcr.microsoft.com/dotnet/runtime:9.0-bookworm-slim AS base
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS base
 
 # Update
 RUN apt update
@@ -76,9 +76,9 @@ WORKDIR /download
 RUN apt install -y unzip wget
 
 # Download required sources
-RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/4.3.0.zip
-RUN wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.3.0.zip
-RUN wget -O opencvsharp.zip https://github.com/shimat/opencvsharp/archive/4.3.0.20200422.zip
+RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/refs/tags/4.11.0.zip
+RUN wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/refs/tags/4.11.0.zip
+RUN wget -O opencvsharp.zip https://github.com/shimat/opencvsharp/archive/refs/tags/4.11.0.20250507.zip
 
 # Extract zips
 RUN unzip opencv.zip
@@ -86,9 +86,9 @@ RUN unzip opencv_contrib.zip
 RUN unzip opencvsharp.zip
 
 # Rename folders
-RUN mv opencv-4.3.0 opencv
-RUN mv opencv_contrib-4.3.0 opencv_contrib
-RUN mv opencvsharp-4.3.0.20200422 opencvsharp
+RUN mv opencv-4.11.0 opencv
+RUN mv opencv_contrib-4.11.0 opencv_contrib
+RUN mv opencvsharp-4.11.0.20250507 opencvsharp
 
 
 #
